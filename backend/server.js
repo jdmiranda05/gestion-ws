@@ -1,34 +1,42 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
-const express = require('express');
-const cors = require('cors');
+const http = require('http');
 const path = require('path');
+const express = require('express');
+const db = require('./db');
+const socket = require('./socket');
+const { noEncontrado, manejarErrores } = require('./middleware/errores');
 
 const app = express();
+app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY === 'true');
 
-app.use(cors());
-app.use(express.json());
-
-// Servir archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-const ticketRoutes = require('./routes/tickets');
-app.use('/api/tickets', ticketRoutes);
-
-const tecnicosRoutes = require('./routes/tecnicos');
-const statsRoutes = require('./routes/stats');
-const commentsRoutes = require('./routes/comments');
-const notificationsRoutes = require('./routes/notifications');
-
-app.use('/api/tecnicos', tecnicosRoutes);
-app.use('/api/stats', statsRoutes);
-app.use('/api/comentarios', commentsRoutes);
-app.use('/api/notificaciones', notificationsRoutes);
-
-const PORT = 3000;
-app.listen(PORT, function() {
-    console.log('Servidor corriendo en http://localhost:' + PORT);
+app.use((req, res, next) => {
+    res.set({ 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin' });
+    next();
 });
+app.use(express.json({ limit: '100kb' }));
+
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/clientes', require('./routes/clientes'));
+app.use('/api/usuarios', require('./routes/usuarios'));
+app.use('/api/incidentes', require('./routes/incidentes'));
+app.use('/api/archivos', require('./routes/archivos'));
+app.use('/api/avisos', require('./routes/avisos'));
+app.use('/api/reportes', require('./routes/reportes'));
+app.use('/api/auditoria', require('./routes/auditoria'));
+app.use('/api', noEncontrado);
+
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(manejarErrores);
+
+const PORT = process.env.PORT || 3000;
+const servidor = http.createServer(app);
+socket.iniciar(servidor);
+
+db.iniciar()
+    .then(() => servidor.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`)))
+    .catch(err => {
+        console.error('No se pudo iniciar la base de datos:', err.message);
+        process.exit(1);
+    });

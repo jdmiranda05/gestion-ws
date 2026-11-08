@@ -1,534 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help Desk - Tickets</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mesa de Ayuda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
 </head>
-
-<body class="dashboard-body">
-
-    <div class="app-container">
-        <!-- Sidebar Menu -->
+<body>
+<div class="app">
+    <div class="offcanvas-lg offcanvas-start sidebar-envoltura" tabindex="-1" id="sidebar">
         <aside class="sidebar">
-            <div class="sidebar-brand">
-                <i class="ph-fill ph-paper-plane-tilt"></i>
-                <h2>AuraDesk</h2>
+            <div class="marca"><span class="marca-logo"><i class="bi bi-headset"></i></span> Mesa de Ayuda</div>
+            <nav class="menu" id="menu"></nav>
+            <div class="usuario-caja">
+                <div class="avatar" id="usuario-avatar"></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="nombre text-truncate" id="usuario-nombre"></div>
+                    <div class="rol" id="usuario-rol"></div>
+                </div>
+                <button class="btn btn-sm text-secondary p-1" id="btn-salir" title="Cerrar sesión" aria-label="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </button>
             </div>
-
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-view="dashboard">
-                    <i class="ph ph-squares-four"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#" class="nav-item" data-view="tickets">
-                    <i class="ph ph-kanban"></i>
-                    <span>Tickets</span>
-                </a>
-                <a href="#" class="nav-item" data-view="clientes">
-                    <i class="ph ph-users"></i>
-                    <span>Clientes</span>
-                </a>
-                <a href="#" class="nav-item" data-view="reportes">
-                    <i class="ph ph-chart-bar"></i>
-                    <span>Reportes y Analíticas</span>
-                </a>
-                <a href="#" class="nav-item" data-view="base">
-                    <i class="ph ph-book-open-text"></i>
-                    <span>Base de Conocimiento</span>
-                </a>
-                <a href="#" class="nav-item" data-view="plantillas">
-                    <i class="ph ph-stack"></i>
-                    <span>Plantillas rápidas</span>
-                </a>
-                <a href="#" class="nav-item" data-view="integraciones">
-                    <i class="ph ph-plug"></i>
-                    <span>Integraciones API</span>
-                </a>
-                <a href="#" class="nav-item" data-view="ajustes">
-                    <i class="ph ph-gear"></i>
-                    <span>Ajustes del Sistema</span>
-                </a>
-            </nav>
         </aside>
+    </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Topbar Header -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="menu-toggle" id="menuToggle"><i class="ph ph-list"></i></button>
-                    <div class="search-bar">
-                        <i class="ph ph-magnifying-glass"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar tickets...">
+    <div class="principal">
+        <header class="barra-superior">
+            <button class="btn btn-light d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-label="Abrir menú">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <h1 id="titulo-pagina"></h1>
+
+            <div class="dropdown">
+                <button class="btn btn-light position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside" id="btn-avisos" aria-label="Notificaciones">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="badge rounded-pill bg-danger campana-badge d-none" id="avisos-contador"></span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end menu-avisos shadow">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <strong>Notificaciones</strong>
+                        <button class="btn btn-link btn-sm p-0" id="avisos-leer">Marcar todas como leídas</button>
                     </div>
+                    <div class="avisos-lista" id="avisos-lista"></div>
                 </div>
-                
-                <div class="topbar-right">
-                    <button class="btn-icon" id="darkModeToggle" title="Modo Oscuro" style="margin-right: 8px;">
-                        <i class="ph ph-moon"></i>
-                    </button>
-                    <button class="btn-create-ticket" onclick="cambiarVista('tickets'); setTimeout(() => document.getElementById('titulo').focus(), 300)">Nuevo Ticket</button>
-                    <div class="notifications" id="notificationToggle">
-                        <i class="ph ph-bell"></i>
-                        <span class="badge" id="notifBadge" style="display:none;">0</span>
-                        <div class="dropdown-menu" id="notifMenu">
-                            <div class="notif-header" style="padding:12px 16px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                                <strong style="font-size:0.9rem;">Notificaciones</strong>
-                                <button id="btnMarcarLeidas" style="background:none; border:none; color:var(--action-primary); cursor:pointer; font-size:0.8rem; font-weight:500;">Marcar leídas</button>
-                            </div>
-                            <div id="notifContent">
-                                <div style="padding:24px 16px; text-align:center; color:var(--text-secondary); font-size:0.85rem;">Sin notificaciones</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="user-profile">
-                        <div class="avatar" id="avatarLetra">U</div>
-                        <span id="usuarioActivo">Usuario</span>
-                        <span id="rolBadge" class="rol-badge"></span>
-                        <i class="ph ph-caret-down"></i>
-                        <div class="dropdown-menu">
-                            <button onclick="logout()"><i class="ph ph-sign-out"></i> Cerrar sesión</button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main class="dashboard-main">
-                
-                <!-- VIEW: DASHBOARD -->
-                <section id="view-dashboard" class="view-section active">
-                    <!-- Saludo dinámico -->
-                    <div class="greeting-section" style="margin-bottom:32px;">
-                        <h2 id="greetingText" style="margin:0 0 4px 0; font-size:1.6rem; font-weight:600;">Bienvenido</h2>
-                        <p style="margin:0; color:var(--text-secondary); font-size:0.95rem;" id="greetingSubtext">Aquí tienes un resumen de tu actividad</p>
-                    </div>
-
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;"><i class="ph-fill ph-ticket"></i></div>
-                            <div class="kpi-data">
-                                <h3>Total Tickets</h3>
-                                <p id="kpi-total">0</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#fef3c7; color:#d97706;"><i class="ph-fill ph-clock"></i></div>
-                            <div class="kpi-data">
-                                <h3>Pendientes</h3>
-                                <p id="kpi-pendientes">0</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#dcfce7; color:#16a34a;"><i class="ph-fill ph-check-circle"></i></div>
-                            <div class="kpi-data">
-                                <h3>Resueltos</h3>
-                                <p id="kpi-resueltos">0</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#f3e8ff; color:#9333ea;"><i class="ph-fill ph-chart-pie"></i></div>
-                            <div class="kpi-data">
-                                <h3>Tasa Resolución</h3>
-                                <p id="kpi-tasa">0%</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="dashboard-widgets">
-                        <!-- Widget Calendario -->
-                        <div class="widget-card">
-                            <div class="widget-header">
-                                <h3>Calendario de Actividad</h3>
-                                <div class="calendar-nav">
-                                    <button id="prevMonth"><i class="ph-bold ph-caret-left"></i></button>
-                                    <span id="monthDisplay">Mayo 2026</span>
-                                    <button id="nextMonth"><i class="ph-bold ph-caret-right"></i></button>
-                                </div>
-                            </div>
-                            <div class="calendar-grid">
-                                <div class="cal-day-header">Dom</div>
-                                <div class="cal-day-header">Lun</div>
-                                <div class="cal-day-header">Mar</div>
-                                <div class="cal-day-header">Mié</div>
-                                <div class="cal-day-header">Jue</div>
-                                <div class="cal-day-header">Vie</div>
-                                <div class="cal-day-header">Sáb</div>
-                                <!-- Días generados por JS -->
-                            </div>
-                        </div>
-                        
-                        <!-- Widget Actividad Reciente -->
-                        <div class="widget-card">
-                            <div class="widget-header">
-                                <h3>Actividad Reciente</h3>
-                            </div>
-                            <div class="recent-activity" id="recentActivityList">
-                                <p class="text-muted">Cargando actividad...</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- VIEW: TICKETS -->
-                <section id="view-tickets" class="view-section">
-                    <div class="dashboard-top-actions">
-                        <div class="filtros">
-                            <button class="filter-btn active" onclick="filtrar('todos', event)">Todos <span class="count" id="count-todos">0</span></button>
-                            <button class="filter-btn" onclick="filtrar('Pendiente', event)">Pendientes <span class="count" id="count-pendientes">0</span></button>
-                            <button class="filter-btn" onclick="filtrar('Resuelto', event)">Resueltos <span class="count" id="count-resueltos">0</span></button>
-                        </div>
-                    </div>
-
-                    <!-- Formulario de creación -->
-                    <section class="form-container">
-                        <h3>Crear Ticket</h3>
-                        <form id="ticketForm" class="inline-form">
-                            <div class="form-group">
-                                <input type="text" id="titulo" placeholder="Asunto del ticket" required>
-                            </div>
-                            <div class="form-group">
-                                <select id="prioridad">
-                                    <option value="Baja">Prioridad: Baja</option>
-                                    <option value="Media" selected>Prioridad: Media</option>
-                                    <option value="Alta">Prioridad: Alta</option>
-                                    <option value="Urgente">Prioridad: Urgente</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-group-full">
-                                <textarea id="descripcion" placeholder="Descripción detallada" required></textarea>
-                            </div>
-                            <div id="asignarJefe" class="form-group" style="display:none;">
-                                <select id="tecnico">
-                                    <option value="">Asignar técnico...</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-actions">
-                                <button type="submit" class="btn-primary">Enviar Ticket</button>
-                            </div>
-                        </form>
-                    </section>
-
-                    <section class="table-container">
-                        <div class="table-header">
-                            <div class="col-checkbox"><input type="checkbox"></div>
-                            <div class="col-id">ID <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-date">ACTUALIZADO <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-name">NOMBRE <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-subject">ASUNTO <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-status">ESTADO <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-replier">ÚLT. RESPUESTA <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-priority">PRIORIDAD <i class="ph-fill ph-caret-up-down"></i></div>
-                            <div class="col-actions"></div>
-                        </div>
-                        
-                        <div id="tickets" class="tickets-table-body">
-                            <!-- Tickets se inyectan aqui -->
-                        </div>
-                    </section>
-                </section>
-
-                <!-- VIEW: CLIENTES -->
-                <section id="view-clientes" class="view-section">
-                    <div class="kpi-grid" style="margin-bottom:24px;">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;"><i class="ph-fill ph-users"></i></div>
-                            <div class="kpi-data"><h3>Total Clientes</h3><p>5</p></div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#dcfce7; color:#16a34a;"><i class="ph-fill ph-crown"></i></div>
-                            <div class="kpi-data"><h3>Premium</h3><p>2</p></div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#fef3c7; color:#d97706;"><i class="ph-fill ph-ticket"></i></div>
-                            <div class="kpi-data"><h3>Tickets Activos</h3><p id="clientes-tickets-activos">7</p></div>
-                        </div>
-                    </div>
-                    <div class="widget-card">
-                        <div class="widget-header">
-                            <h3>Directorio de Clientes</h3>
-                        </div>
-                        <table style="width:100%; text-align:left; border-collapse:collapse;">
-                            <thead>
-                                <tr style="border-bottom:2px solid var(--border-color); color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">
-                                    <th style="padding:12px;">Cliente</th>
-                                    <th style="padding:12px;">Contacto</th>
-                                    <th style="padding:12px;">Teléfono</th>
-                                    <th style="padding:12px;">Plan</th>
-                                    <th style="padding:12px;">Tickets</th>
-                                    <th style="padding:12px;">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="border-bottom:1px solid var(--border-color);">
-                                    <td style="padding:14px 12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:32px;height:32px;border-radius:8px;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">TS</div><span style="font-weight:500;">TechSolutions S.A.</span></div></td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">carlos@techsolutions.com</td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">+504 9876-5432</td>
-                                    <td style="padding:14px 12px;"><span style="background:#dcfce7;color:#16a34a;padding:4px 10px;border-radius:4px;font-size:0.8rem;font-weight:500;">Premium</span></td>
-                                    <td style="padding:14px 12px; font-weight:600;">3</td>
-                                    <td style="padding:14px 12px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#16a34a;"><i class="ph-fill ph-circle" style="font-size:8px;"></i> Activo</span></td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border-color);">
-                                    <td style="padding:14px 12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:32px;height:32px;border-radius:8px;background:#f3e8ff;color:#9333ea;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">CG</div><span style="font-weight:500;">Consultores Globales</span></div></td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">maria@consultores.com</td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">+504 2234-1100</td>
-                                    <td style="padding:14px 12px;"><span style="background:#f3f4f6;color:var(--text-secondary);padding:4px 10px;border-radius:4px;font-size:0.8rem;font-weight:500;">Estándar</span></td>
-                                    <td style="padding:14px 12px; font-weight:600;">1</td>
-                                    <td style="padding:14px 12px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#16a34a;"><i class="ph-fill ph-circle" style="font-size:8px;"></i> Activo</span></td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border-color);">
-                                    <td style="padding:14px 12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:32px;height:32px;border-radius:8px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">IM</div><span style="font-weight:500;">InnovaMedia Corp</span></div></td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">pedro@innovamedia.io</td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">+504 3312-4455</td>
-                                    <td style="padding:14px 12px;"><span style="background:#dcfce7;color:#16a34a;padding:4px 10px;border-radius:4px;font-size:0.8rem;font-weight:500;">Premium</span></td>
-                                    <td style="padding:14px 12px; font-weight:600;">2</td>
-                                    <td style="padding:14px 12px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#16a34a;"><i class="ph-fill ph-circle" style="font-size:8px;"></i> Activo</span></td>
-                                </tr>
-                                <tr style="border-bottom:1px solid var(--border-color);">
-                                    <td style="padding:14px 12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:32px;height:32px;border-radius:8px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">LR</div><span style="font-weight:500;">LogiRed Express</span></div></td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">ana@logired.hn</td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">+504 8800-1234</td>
-                                    <td style="padding:14px 12px;"><span style="background:#f3f4f6;color:var(--text-secondary);padding:4px 10px;border-radius:4px;font-size:0.8rem;font-weight:500;">Estándar</span></td>
-                                    <td style="padding:14px 12px; font-weight:600;">1</td>
-                                    <td style="padding:14px 12px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#d97706;"><i class="ph-fill ph-circle" style="font-size:8px;"></i> Pendiente</span></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:14px 12px;"><div style="display:flex; align-items:center; gap:10px;"><div style="width:32px;height:32px;border-radius:8px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">DS</div><span style="font-weight:500;">DataSoft Labs</span></div></td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">jose@datasoft.com</td>
-                                    <td style="padding:14px 12px; color:var(--text-secondary); font-size:0.9rem;">+504 2200-8899</td>
-                                    <td style="padding:14px 12px;"><span style="background:#fef3c7;color:#d97706;padding:4px 10px;border-radius:4px;font-size:0.8rem;font-weight:500;">Básico</span></td>
-                                    <td style="padding:14px 12px; font-weight:600;">0</td>
-                                    <td style="padding:14px 12px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:#6b7280;"><i class="ph-fill ph-circle" style="font-size:8px;"></i> Inactivo</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- VIEW: REPORTES -->
-                <section id="view-reportes" class="view-section">
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#f3e8ff; color:#9333ea;"><i class="ph-fill ph-trend-up"></i></div>
-                            <div class="kpi-data">
-                                <h3>Tiempo Medio Res.</h3>
-                                <p>4.2 hrs</p>
-                            </div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#ffedd5; color:#ea580c;"><i class="ph-fill ph-star"></i></div>
-                            <div class="kpi-data">
-                                <h3>Satisfacción (CSAT)</h3>
-                                <p>98%</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="widget-card">
-                        <h3>Rendimiento del Equipo</h3>
-                        <div style="margin-top: 20px;">
-                            <div style="margin-bottom: 16px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
-                                    <span>Tickets Resueltos (Esta semana)</span>
-                                    <strong>45 / 50</strong>
-                                </div>
-                                <div style="width:100%; background:#f3f4f6; height:8px; border-radius:4px; overflow:hidden;">
-                                    <div style="width:90%; background:var(--action-primary); height:100%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- VIEW: BASE DE CONOCIMIENTO -->
-                <section id="view-base" class="view-section">
-                    <div class="dashboard-widgets" style="grid-template-columns: 1fr;">
-                        <div class="widget-card">
-                            <div class="widget-header">
-                                <h3>Base de Conocimiento</h3>
-                                <button class="btn-primary">Nuevo Artículo</button>
-                            </div>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                                <div style="padding:16px; border:1px solid var(--border-color); border-radius:8px;">
-                                    <h4 style="margin:0 0 8px 0;">¿Cómo restablecer contraseñas?</h4>
-                                    <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Guía paso a paso para el restablecimiento seguro de credenciales de usuario.</p>
-                                </div>
-                                <div style="padding:16px; border:1px solid var(--border-color); border-radius:8px;">
-                                    <h4 style="margin:0 0 8px 0;">Configuración de VPN</h4>
-                                    <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Manual para configurar clientes VPN en Windows y macOS.</p>
-                                </div>
-                                <div style="padding:16px; border:1px solid var(--border-color); border-radius:8px;">
-                                    <h4 style="margin:0 0 8px 0;">Políticas de Seguridad</h4>
-                                    <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Documento oficial de normativas internas de la empresa.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- VIEW: PLANTILLAS RÁPIDAS -->
-                <section id="view-plantillas" class="view-section">
-                    <div class="dashboard-widgets" style="grid-template-columns: 1fr;">
-                        <div class="widget-card">
-                            <div class="widget-header">
-                                <h3>Plantillas de Respuesta Rápidas</h3>
-                                <button class="btn-primary">Crear Plantilla</button>
-                            </div>
-                            <ul style="list-style:none; padding:0; margin:0;">
-                                <li style="padding:12px; border-bottom:1px solid var(--border-color);">
-                                    <strong>[Bienvenida]</strong> Gracias por contactarnos, hemos recibido tu ticket...
-                                </li>
-                                <li style="padding:12px; border-bottom:1px solid var(--border-color);">
-                                    <strong>[Escalamiento]</strong> Tu caso ha sido escalado a nivel 2 para una revisión exhaustiva...
-                                </li>
-                                <li style="padding:12px;">
-                                    <strong>[Cierre]</strong> Confirmamos que el problema ha sido resuelto. Si necesitas más ayuda...
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- VIEW: INTEGRACIONES -->
-                <section id="view-integraciones" class="view-section">
-                    <div class="kpi-grid">
-                        <div class="kpi-card" style="justify-content:space-between;">
-                            <div style="display:flex; align-items:center; gap:16px;">
-                                <div class="kpi-icon" style="background:#f3f4f6;"><i class="ph-fill ph-slack-logo" style="color:#4a154b;"></i></div>
-                                <div>
-                                    <h3 style="margin:0 0 4px 0;">Slack</h3>
-                                    <p style="margin:0; font-size:0.85rem; color:var(--text-secondary);">Notificaciones de tickets</p>
-                                </div>
-                            </div>
-                            <span style="background:#dcfce7; color:#16a34a; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Conectado</span>
-                        </div>
-                        <div class="kpi-card" style="justify-content:space-between;">
-                            <div style="display:flex; align-items:center; gap:16px;">
-                                <div class="kpi-icon" style="background:#f3f4f6;"><i class="ph-fill ph-envelope-simple" style="color:#ea4335;"></i></div>
-                                <div>
-                                    <h3 style="margin:0 0 4px 0;">Gmail / Workspace</h3>
-                                    <p style="margin:0; font-size:0.85rem; color:var(--text-secondary);">Creación por email</p>
-                                </div>
-                            </div>
-                            <button class="btn-small">Conectar</button>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- VIEW: AJUSTES -->
-                <section id="view-ajustes" class="view-section">
-                    <div class="widget-card">
-                        <h3>Ajustes del Sistema</h3>
-                        <p style="color:var(--text-secondary); margin-bottom:24px;">Configura las preferencias generales de AuraDesk.</p>
-                        
-                        <div class="form-group" style="margin-bottom:16px;">
-                            <label style="display:block; margin-bottom:8px; font-weight:500;">Nombre de la Empresa</label>
-                            <input type="text" value="AuraDesk Inc." class="modal-input" style="max-width:400px; margin:0;">
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom:16px;">
-                            <label style="display:block; margin-bottom:8px; font-weight:500;">Zona Horaria</label>
-                            <select class="modal-input" style="max-width:400px; margin:0;">
-                                <option>GMT-6 (América Central)</option>
-                                <option>GMT-5 (Colombia, Perú)</option>
-                                <option>GMT+1 (Madrid)</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn-primary">Guardar Cambios</button>
-                    </div>
-                </section>
-
-            </main>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div id="ticketDetalle" class="modal-card" style="display:none;"></div>
-    <div id="overlay" style="display:none;" class="modal-overlay" onclick="cerrarDetalle()"></div>
-    
-    <div id="editarTicket" class="modal-card" style="display:none;">
-        <h3>Editar Ticket</h3>
-        <form id="editForm">
-            <input type="text" id="editTitulo" placeholder="Titulo" required class="modal-input">
-            <textarea id="editDescripcion" placeholder="Descripcion" required class="modal-textarea"></textarea>
-            <select id="editEstado" class="modal-select">
-                <option value="Pendiente">Pendiente</option>
-                <option value="Resuelto">Resuelto</option>
-            </select>
-            <label class="modal-label">Asignar Técnico:</label>
-            <select id="editTecnico" class="modal-select">
-                <option value="">Seleccionar tecnico</option>
-            </select>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="cerrarEdicion()">Cancelar</button>
-                <button type="submit" class="btn-primary">Guardar</button>
             </div>
-        </form>
+        </header>
+
+        <main class="contenido" id="contenido"></main>
     </div>
+</div>
 
-    <div id="comentariosSection" class="modal-card" style="display:none;">
-        <div class="modal-header">
-            <h3>Comentarios</h3>
-            <button class="close-btn" onclick="cerrarComentarios()"><i class="ph ph-x"></i></button>
-        </div>
-        <div id="listaComentarios" class="comentarios-list"></div>
-        <textarea id="nuevoComentario" placeholder="Agregar comentario..." class="modal-textarea"></textarea>
-        <button onclick="agregarComentario()" class="btn-primary w-100">Agregar Comentario</button>
-    </div>
-
-    <!-- Modal de confirmación para eliminar -->
-    <div id="confirmModal" class="modal-card" style="display:none; max-width:380px; text-align:center;">
-        <div style="margin-bottom:20px;">
-            <div style="width:56px; height:56px; border-radius:50%; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin:0 auto 16px auto;">
-                <i class="ph-fill ph-warning"></i>
-            </div>
-            <h3 style="margin:0 0 8px 0; font-size:1.1rem;">Eliminar ticket</h3>
-            <p style="margin:0; color:var(--text-secondary); font-size:0.9rem;">¿Estás seguro? Esta acción no se puede deshacer.</p>
-        </div>
-        <div style="display:flex; gap:12px; justify-content:center;">
-            <button id="confirmCancelar" class="btn-secondary" style="flex:1;">Cancelar</button>
-            <button id="confirmAceptar" class="btn-primary" style="flex:1; background:#ef4444;">Eliminar</button>
-        </div>
-    </div>
-
-    <div id="mensajes" class="toast-container"></div>
-    
-    <script>
-        // Dropdowns and menus
-        document.querySelector('.user-profile').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const menu = this.querySelector('.dropdown-menu');
-            document.querySelectorAll('.dropdown-menu').forEach(m => {
-                if(m !== menu) m.classList.remove('show');
-            });
-            menu.classList.toggle('show');
-        });
-        
-        document.getElementById('notificationToggle').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const menu = document.getElementById('notifMenu');
-            document.querySelectorAll('.dropdown-menu').forEach(m => {
-                if(m !== menu) m.classList.remove('show');
-            });
-            menu.classList.toggle('show');
-        });
-        
-        window.addEventListener('click', function(e) {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
-        });
-        
-        document.getElementById('menuToggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('collapsed');
-        });
-    </script>
-
-    <script src="messages.js"></script>
-    <script src="app.js"></script>
-    <script src="authCheck.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
